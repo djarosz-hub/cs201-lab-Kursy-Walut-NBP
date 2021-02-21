@@ -16,21 +16,17 @@ namespace ConsoleApp2
         static void Main(string[] args)
         {
             //EUR 2018-09-01 2018-09-20
-            //string[] input = Console.ReadLine().Split(' ');
             if (args.Length == 0)
                 return;
-            foreach(var c in args)
-                Console.WriteLine(c);
-            string[] input = args[0].Split(' ');
-            Console.WriteLine(input.Length);
-            if (input.Length != 3)
+            Console.WriteLine(args.Length);
+            if (args.Length != 3)
             {
                 Console.WriteLine("Unsupported input format");
                 return;
             }
             bool wrongCur = true;
             var currencies = Enum.GetValues(typeof(Currency));
-            string currency = input[0];
+            string currency = args[0];
             foreach (var c in currencies)
             {
                 if (c.ToString() == currency)
@@ -43,8 +39,8 @@ namespace ConsoleApp2
             }
             try
             {
-                DateTime.TryParseExact(input[1], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result);
-                DateTime.TryParseExact(input[2], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result2);
+                DateTime.TryParseExact(args[1], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result);
+                DateTime.TryParseExact(args[2], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result2);
                 if (result.Year == 0001 || result2.Year == 0001)
                     throw new Exception();
                 if (result2 < result)
@@ -68,10 +64,10 @@ namespace ConsoleApp2
                 Console.WriteLine("Invalid date format");
                 return;
             }
-            string beginFileDate = string.Join("", input[1].Substring(2).Split('-'));
-            string endFileDate = string.Join("", input[2].Substring(2).Split('-'));
-            string beginYear = input[1].Substring(0, 4);
-            string endYear = input[2].Substring(0, 4);
+            string beginFileDate = string.Join("", args[1].Substring(2).Split('-'));
+            string endFileDate = string.Join("", args[2].Substring(2).Split('-'));
+            string beginYear = args[1].Substring(0, 4);
+            string endYear = args[2].Substring(0, 4);
             List<string> yearsToDownload = new List<string>();
             if (beginYear == endYear)
                 yearsToDownload.Add(beginYear);
@@ -150,7 +146,7 @@ namespace ConsoleApp2
                 }
             }
             Console.Clear();
-            Console.WriteLine($"Data about {currency} from {input[1]} to {input[2]}:\n");
+            Console.WriteLine($"Data about {currency} from {args[1]} to {args[2]}:\n");
             //sell
             var sortedSell = currList.OrderByDescending(x => x.sellPrice);
             var highestSell = sortedSell.First();
@@ -164,14 +160,14 @@ namespace ConsoleApp2
                 varianceSell += Math.Pow((double)(cur.sellPrice - avgSell), 2);
             }
             double standardDeviationSell = Math.Sqrt(varianceSell/sortedSell.Count());
-            Console.WriteLine($"Average sell exchange rate: {avgSell:0.0000}");
-            Console.WriteLine($"Standard deviation for sell exchange rate: {standardDeviationSell:0.0000}");
+            Console.WriteLine($"Average sell exchange rate: {avgSell:C4}");
+            Console.WriteLine($"Standard deviation for sell exchange rate: {standardDeviationSell:C4}");
             Console.WriteLine("Highest sell exchange rate:");
             foreach (var a in allHighestSell)
-                Console.WriteLine($"{a.sellPrice} {a.date}");
+                Console.WriteLine($"{a.date}: {a.sellPrice:C4}");
             Console.WriteLine("Lowest sell exchange rate:");
             foreach (var a in allLowestSell)
-                Console.WriteLine($"{a.sellPrice} {a.date}");
+                Console.WriteLine($"{a.date}: {a.sellPrice:C4}");
             //buy
             Console.WriteLine();
             var sortedBuy = currList.OrderByDescending(x => x.buyPrice);
@@ -186,14 +182,14 @@ namespace ConsoleApp2
                 varianceBuy += Math.Pow((double)(cur.buyPrice - avgBuy), 2);
             }
             double standardDeviationBuy = Math.Sqrt(varianceBuy / sortedBuy.Count());
-            Console.WriteLine($"Average buy exchange rate: {avgBuy:0.0000}");
-            Console.WriteLine($"Standard deviation for buy exchange rate: {standardDeviationBuy:0.0000}");
+            Console.WriteLine($"Average buy exchange rate: {avgBuy:C4}");
+            Console.WriteLine($"Standard deviation for buy exchange rate: {standardDeviationBuy:C4}");
             Console.WriteLine("Highest buy exchange rate:");
             foreach (var a in allHighestBuy)
-                Console.WriteLine($"{a.buyPrice} {a.date}");
+                Console.WriteLine($"{a.date}: {a.buyPrice:C4}");
             Console.WriteLine("Lowest buy exchange rate:");
             foreach (var a in allLowestBuy)
-                Console.WriteLine($"{a.buyPrice} {a.date}");
+                Console.WriteLine($"{a.date}: {a.buyPrice:C4}");
 
             Console.ReadKey();
         }
