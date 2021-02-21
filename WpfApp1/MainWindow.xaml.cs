@@ -97,13 +97,15 @@ namespace WpfApp1
         }
         bool GetInfoFromFiles(List<string> yearsToDownload, List<string> docDirs, string beginFileDate, string endFileDate)
         {
+            ProgressLabel.Content = "Downloading data...";
             using (var client = new WebClient())
             {
                 if (File.Exists("tempfile.txt"))
                     File.Delete("tempfile.txt");
-                //Console.WriteLine("Downloading data...");
+                double pbPart = 100d / yearsToDownload.Count();
                 foreach (var year in yearsToDownload)
                 {
+                    progressBar.Value += pbPart/2;
                     string inp = year;
                     if (year == DateTime.Now.Year.ToString())
                         inp = "";
@@ -114,6 +116,7 @@ namespace WpfApp1
                     catch (Exception)
                     {
                         MessageBox.Show("Failed to download data.");
+                        ResetProgressInfo();
                         return false;
                     }
                     var linesRead = File.ReadLines("tempfile.txt");
@@ -123,6 +126,7 @@ namespace WpfApp1
                         if (string.Compare(docDate, endFileDate) <= 0 && string.Compare(docDate, beginFileDate) >= 0)
                             docDirs.Add(line);
                     }
+                    progressBar.Value += pbPart / 2;
                     File.Delete("tempfile.txt");
                 }
             }
@@ -151,12 +155,17 @@ namespace WpfApp1
         }
         bool SuccessfullDataRetrieve(List<CurrencyInfo> currList, List<string> yearsToDownload, List<string> docDirs, string currency)
         {
+            ProgressLabel.Content = "Retrieving data...";
+            progressBar.Value = 0;
+            int pbPart = 100 / yearsToDownload.Count();
             foreach (var year in yearsToDownload)
             {
                 string yearSignature = year.Substring(2);
                 var yearDocs = docDirs.Where(x => x.Substring(5, 2) == yearSignature);
+                int smallPbPart = pbPart / yearDocs.Count();
                 foreach (var y in yearDocs)
                 {
+                    progressBar.Value += smallPbPart;
                     string path = $"http://www.nbp.pl/kursy/xml/{y}.xml";
                     try
                     {
@@ -170,6 +179,7 @@ namespace WpfApp1
                     catch (Exception)
                     {
                         MessageBox.Show("Failed to load data.");
+                        ResetProgressInfo();
                         return false;
                     }
                 }
@@ -178,13 +188,17 @@ namespace WpfApp1
         }
         void DisplayOutput(string currency, string fromDate, string toDate, List<CurrencyInfo> currList)
         {
+            ProgressLabel.Content = "Sorting data...";
+            progressBar.Value = 0;
             StringBuilder sb = new StringBuilder();
             sb.Append($"Data about {currency} from {fromDate} to {toDate}:\n");
+            sb.Append(Environment.NewLine);
             //sell
             var sortedSell = currList.OrderByDescending(x => x.sellPrice);
             var highestSell = sortedSell.First();
             var lowestSell = sortedSell.Last();
             var allHighestSell = sortedSell.Where(x => x.sellPrice == highestSell.sellPrice);
+            progressBar.Value = 25;
             var allLowestSell = sortedSell.Where(x => x.sellPrice == lowestSell.sellPrice);
             decimal avgSell = sortedSell.Aggregate(0m, (sum, val) => sum + val.sellPrice) / sortedSell.Count();
             double varianceSell = 0;
@@ -201,6 +215,7 @@ namespace WpfApp1
             sb.Append("Lowest sell exchange rate:\n");
             foreach (var a in allLowestSell)
                 sb.Append($"{a.date}: {a.sellPrice:C4}\n");
+            progressBar.Value = 50;
             //buy
             sb.Append(Environment.NewLine);
             var sortedBuy = currList.OrderByDescending(x => x.buyPrice);
@@ -209,6 +224,7 @@ namespace WpfApp1
             var allHighestBuy = sortedBuy.Where(x => x.buyPrice == highestBuy.buyPrice);
             var allLowestBuy = sortedBuy.Where(x => x.buyPrice == lowestBuy.buyPrice);
             decimal avgBuy = sortedBuy.Aggregate(0m, (sum, val) => sum + val.buyPrice) / sortedBuy.Count();
+            progressBar.Value = 75;
             double varianceBuy = 0;
             foreach (var cur in sortedBuy)
             {
@@ -223,7 +239,15 @@ namespace WpfApp1
             sb.Append("Lowest buy exchange rate:\n");
             foreach (var a in allLowestBuy)
                 sb.Append($"{a.date}: {a.buyPrice:C4}\n");
+            progressBar.Value = 100;
+            ProgressLabel.Content = "Done";
             MessageBox.Show(sb.ToString());
+            ResetProgressInfo();
+        }
+        void ResetProgressInfo()
+        {
+            progressBar.Value = 0;
+            ProgressLabel.Content = "Task progress";
         }
         struct CurrencyInfo
         {

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
         Title="MainWindow" Height="300" Width="400">
     <Grid>
         <Grid.Background>
@@ -14,9 +15,11 @@
             </LinearGradientBrush>
         </Grid.Background>
         <Button Content="Check" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,50" Width="100" Height="50" FontSize="26" Click="Check_Click"/>
-        <ComboBox x:Name="CurrencyCB" HorizontalAlignment="Left" Margin="25,81,0,0" VerticalAlignment="Top" Width="120" ItemsSource="{Binding AvailableCurrencies}" SelectedIndex="0"/>
-        <DatePicker x:Name="FromDateDP" HorizontalAlignment="Left" Margin="151,79,0,0" VerticalAlignment="Top"/>
-        <DatePicker x:Name="ToDateDP" HorizontalAlignment="Left" Margin="258,79,0,0" VerticalAlignment="Top"/>
+        <ComboBox x:Name="CurrencyCB" HorizontalAlignment="Left" Margin="25,50,0,0" VerticalAlignment="Top" Width="120" ItemsSource="{Binding AvailableCurrencies}" SelectedIndex="0"/>
+        <DatePicker x:Name="FromDateDP" HorizontalAlignment="Left" Margin="151,50,0,0" VerticalAlignment="Top"/>
+        <DatePicker x:Name="ToDateDP" HorizontalAlignment="Left" Margin="258,50,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="ProgressLabel" Content="Task progress" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,70" FontSize="20" Foreground="White"/>
+        <ProgressBar x:Name="progressBar" HorizontalAlignment="Center" Height="30" VerticalAlignment="Center" Width="300" Minimum="0" Maximum="100"/>
 
     </Grid>
 </Window>
