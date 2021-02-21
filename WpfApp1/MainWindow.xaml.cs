@@ -80,6 +80,56 @@ namespace WpfApp1
             string beginYear = fromDate.Substring(0, 4);
             string endYear = toDate.Substring(0, 4);
             List<string> yearsToDownload = new List<string>();
+            List<string> docDirs = new List<string>();
+            List<CurrencyInfo> currList = new List<CurrencyInfo>();
+
+            GetYearsToDownload(yearsToDownload, beginYear, endYear);
+            if (!GetInfoFromFiles(yearsToDownload, docDirs, beginFileDate, endFileDate))
+                return;
+            if (!SuccessfullDataRetrieve(currList, yearsToDownload, docDirs, currency))
+                return;
+            if (currList.Count == 0)
+            {
+                MessageBox.Show("No data avaiable for this timespan.");
+                return;
+            }
+            DisplayOutput(currency, fromDate, toDate, currList);
+        }
+        bool GetInfoFromFiles(List<string> yearsToDownload, List<string> docDirs, string beginFileDate, string endFileDate)
+        {
+            using (var client = new WebClient())
+            {
+                if (File.Exists("tempfile.txt"))
+                    File.Delete("tempfile.txt");
+                //Console.WriteLine("Downloading data...");
+                foreach (var year in yearsToDownload)
+                {
+                    string inp = year;
+                    if (year == DateTime.Now.Year.ToString())
+                        inp = "";
+                    try
+                    {
+                        client.DownloadFile($"https://www.nbp.pl/kursy/xml/dir{inp}.txt", "tempfile.txt");
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Failed to download data.");
+                        return false;
+                    }
+                    var linesRead = File.ReadLines("tempfile.txt");
+                    foreach (var line in linesRead.Where(x => x[0] == 'c').ToList())
+                    {
+                        string docDate = line.Substring(5);
+                        if (string.Compare(docDate, endFileDate) <= 0 && string.Compare(docDate, beginFileDate) >= 0)
+                            docDirs.Add(line);
+                    }
+                    File.Delete("tempfile.txt");
+                }
+            }
+            return true;
+        }
+        void GetYearsToDownload(List<string> yearsToDownload, string beginYear, string endYear)
+        {
             if (beginYear == endYear)
                 yearsToDownload.Add(beginYear);
             else if (int.Parse(endYear) - int.Parse(beginYear) == 1)
@@ -98,43 +148,13 @@ namespace WpfApp1
                 }
                 yearsToDownload.Add(endYear);
             }
-
-            List<string> docDirs = new List<string>();
-            using (var client = new WebClient())
-            {
-                if (File.Exists("tempfile.txt"))
-                    File.Delete("tempfile.txt");
-                //Console.WriteLine("Downloading data...");
-                foreach (var year in yearsToDownload)
-                {
-                    string inp = year;
-                    if (year == DateTime.Now.Year.ToString())
-                        inp = "";
-                    try
-                    {
-                        client.DownloadFile($"https://www.nbp.pl/kursy/xml/dir{inp}.txt", "tempfile.txt");
-                    }
-                    catch (Exception)
-                    {
-                        MessageBox.Show("Failed to download data.");
-                        return;
-                    }
-                    var linesRead = File.ReadLines("tempfile.txt");
-                    foreach (var line in linesRead.Where(x => x[0] == 'c').ToList())
-                    {
-                        string docDate = line.Substring(5);
-                        if (string.Compare(docDate, endFileDate) <= 0 && string.Compare(docDate, beginFileDate) >= 0)
-                            docDirs.Add(line);
-                    }
-                    File.Delete("tempfile.txt");
-                }
-            }
-            List<CurrencyInfo> currList = new List<CurrencyInfo>();
+        }
+        bool SuccessfullDataRetrieve(List<CurrencyInfo> currList, List<string> yearsToDownload, List<string> docDirs, string currency)
+        {
             foreach (var year in yearsToDownload)
             {
                 string yearSignature = year.Substring(2);
                 var yearDocs = docDirs.Where(x => x.Substring(5, 2) == yearSignature);
-                int cnt = docDirs.Count();
                 foreach (var y in yearDocs)
                 {
                     string path = $"http://www.nbp.pl/kursy/xml/{y}.xml";
@@ -150,17 +170,11 @@ namespace WpfApp1
                     catch (Exception)
                     {
                         MessageBox.Show("Failed to load data.");
-                        return;
+                        return false;
                     }
                 }
             }
-            if(currList.Count == 0)
-            {
-                MessageBox.Show("No data avaiable for this timespan.");
-                return;
-            }
-            DisplayOutput(currency, fromDate, toDate,currList);
-            
+            return true;
         }
         void DisplayOutput(string currency, string fromDate, string toDate, List<CurrencyInfo> currList)
         {
@@ -218,6 +232,5 @@ namespace WpfApp1
             public string date { get; set; }
         }
         enum Currency { USD, EUR, CHF, GBP };
-
     }
 }
