@@ -145,6 +145,11 @@ namespace ConsoleApp2
                     }
                 }
             }
+            if (currList.Count == 0)
+            {
+                Console.WriteLine("No data avaiable for this timespan.");
+                return;
+            }
             Console.Clear();
             Console.WriteLine($"Data about {currency} from {args[1]} to {args[2]}:\n");
             //sell
